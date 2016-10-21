@@ -32,7 +32,7 @@ using namespace boost::unit_test_framework;
 
 bool AdjointGreekTest::testDelta()
 {
-    BOOST_TEST_MESSAGE("Testing the CppAD differentiation for Delta from the Black–Scholes formula...");
+    BOOST_TEST_MESSAGE("Testing the CppAD differentiation for Delta from the Blackï¿½Scholes formula...");
 #ifdef CL_TAPE_CPPAD
        size_t n = 1;
     size_t m = 1;
@@ -80,7 +80,7 @@ bool AdjointGreekTest::testDelta()
 
 bool AdjointGreekTest::testGamma()
 {
-    BOOST_TEST_MESSAGE("Testing the CppAD differentiation for Gamma from the Black–Scholes formula...");
+    BOOST_TEST_MESSAGE("Testing the CppAD differentiation for Gamma from the Blackï¿½Scholes formula...");
 #ifdef CL_TAPE_CPPAD
     size_t n = 1;
     size_t m = 1;
@@ -130,7 +130,7 @@ bool AdjointGreekTest::testGamma()
 
 bool AdjointGreekTest::testVega()
 {
-    BOOST_TEST_MESSAGE("Testing the CppAD differentiation for Vega from the Black–Scholes formula...");
+    BOOST_TEST_MESSAGE("Testing the CppAD differentiation for Vega from the Blackï¿½Scholes formula...");
 #ifdef CL_TAPE_CPPAD
     size_t n = 1;
     size_t m = 1;
@@ -178,7 +178,7 @@ bool AdjointGreekTest::testVega()
 
 bool AdjointGreekTest::testTheta()
 {
-    BOOST_TEST_MESSAGE("Testing the CppAD differentiation for Theta from the Black–Scholes formula...");
+    BOOST_TEST_MESSAGE("Testing the CppAD differentiation for Theta from the Blackï¿½Scholes formula...");
 #ifdef CL_TAPE_CPPAD
     size_t n = 1;
     size_t m = 1;
@@ -192,7 +192,7 @@ bool AdjointGreekTest::testTheta()
     //Declare stock as an independent variable
     CppAD::Independent(time);
     Real forward = stock * std::exp(rate*time[0]);
-    Real stdDev = sigma * std::sqrt(time[0]);
+    Real stdDev = sigma * std::sqrt((Real)time[0]);
     Real discount = std::exp(-rate * time[0]);
     BlackCalculator BC(Option::Call, strike, forward, stdDev, discount);
     std::vector<Real::value_type> Price(1);
@@ -227,7 +227,7 @@ bool AdjointGreekTest::testTheta()
 
 bool AdjointGreekTest::testRho()
 {
-    BOOST_TEST_MESSAGE("Testing the CppAD differentiation for Rho from the Black–Scholes formula...");
+    BOOST_TEST_MESSAGE("Testing the CppAD differentiation for Rho from the Blackï¿½Scholes formula...");
 #ifdef CL_TAPE_CPPAD
     size_t n = 1;
     size_t m = 1;

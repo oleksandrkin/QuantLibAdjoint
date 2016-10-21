@@ -41,7 +41,7 @@ std::vector<Complex> initVector(size_t size)
 {
     std::vector<Complex> result;
     for (size_t i = 0; i < size; i++)
-        result.push_back({i+1, 0});
+        result.push_back({(Real)(i+1), 0});
     return result;
 }
 

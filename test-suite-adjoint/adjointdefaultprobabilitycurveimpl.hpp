@@ -100,7 +100,7 @@ namespace
         {
         }
 
-        template <class T, class I>
+        template <class Ty, class Iy>
         Real computeFairRateFromSpread(Real quote, Integer n)
         {
             settlementDays_ = 1;
@@ -114,7 +114,7 @@ namespace
 
             RelinkableHandle<DefaultProbabilityTermStructure> piecewiseCurve;
             piecewiseCurve.linkTo(
-                boost::make_shared<PiecewiseDefaultCurve<T, I>>(
+                boost::make_shared<PiecewiseDefaultCurve<Ty, Iy>>(
                 today_, helpers,
                 Thirty360()));
 
@@ -140,7 +140,7 @@ namespace
             return cds.fairSpread();
         }
 
-        template <class T, class I>
+        template <class Ty, class Iy>
         Real computeFairRateFromUpfront(Real quote, Integer n)
         {
             settlementDays_ = 0;
@@ -153,7 +153,7 @@ namespace
 
             RelinkableHandle<DefaultProbabilityTermStructure> piecewiseCurve;
             piecewiseCurve.linkTo(
-                boost::make_shared<PiecewiseDefaultCurve<T, I>>(today_, helpers,
+                boost::make_shared<PiecewiseDefaultCurve<Ty, Iy>>(today_, helpers,
                 Thirty360()));
 
             // ensure apple-to-apple comparison
@@ -215,10 +215,10 @@ namespace
         // Calculates derivatives using finite difference method.
         void calcAnalytical()
         {
-            analyticalResults_.resize(size_, 0);
+            this->analyticalResults_.resize(size_, 0);
             for (Size i = 0; i < size_; i++)
             {
-                analyticalResults_[i] = t_[i] * std::exp(-hazardRate_[0] * t_[i]);
+                this->analyticalResults_[i] = t_[i] * std::exp(-hazardRate_[0] * t_[i]);
             }
         }
 
@@ -276,7 +276,7 @@ namespace
         void calcAnalytical()
         {
             double h = 1e-4;  // shift for finite diff. method
-            analyticalResults_.resize(size_*size_, 0);
+            this->analyticalResults_.resize(size_*size_, 0);
 
             Handle<Quote> hazardRateQuote = Handle<Quote>(
                 boost::make_shared<SimpleQuote>(0.0100));
@@ -286,7 +286,7 @@ namespace
             {
                 Real rightValue = flatHazardRate.defaultProbability(t_[i] + h);
                 Real leftValue = flatHazardRate.defaultProbability(t_[i] - h);
-                analyticalResults_[i*size_ + i] = (rightValue - leftValue) / (2 * h);
+                this->analyticalResults_[i*size_ + i] = (rightValue - leftValue) / (2 * h);
             }
         }
 
@@ -308,7 +308,8 @@ namespace
     struct TestBootstrapFromSpread
         : public cl::AdjointTest<TestBootstrapFromSpread<T,I>>
         {
-        static const CalcMethod default_method = other;
+        using CalcMethod = typename cl::AdjointTest<TestBootstrapFromSpread<T,I>>::CalcMethod;
+        static const CalcMethod default_method = CalcMethod::other;
 
         TestBootstrapFromSpread(Size size)
             : size_(size)
@@ -331,19 +332,19 @@ namespace
             void computeFairRate()
             {
                 for (Size i = 0; i < size_; i++)
-                    computedRate_[i] = var_.computeFairRateFromSpread<T, I>(quote_[i], i+1);
+                    computedRate_[i] = var_.template computeFairRateFromSpread<T, I>(quote_[i], i+1);
             }
 
             // Calculates derivatives using finite difference method.
             void calcAnalytical()
             {
                 double h = 1e-4;  // shift for finite diff. method
-                analyticalResults_.resize(size_*size_, 0);
+                this->analyticalResults_.resize(size_*size_, 0);
                 for (Size i = 0; i < size_; i++)
                 {
-                    Real rightValue = var_.computeFairRateFromSpread<T, I>(quote_[i] + h, i + 1);
-                    Real leftValue = var_.computeFairRateFromSpread<T, I>(quote_[i] - h, i + 1);
-                    analyticalResults_[i*size_ + i] = (rightValue - leftValue) / (2 * h);
+                    Real rightValue = var_.template computeFairRateFromSpread<T, I>(quote_[i] + h, i + 1);
+                    Real leftValue = var_.template computeFairRateFromSpread<T, I>(quote_[i] - h, i + 1);
+                    this->analyticalResults_[i*size_ + i] = (rightValue - leftValue) / (2 * h);
                 }
             }
 
@@ -356,7 +357,6 @@ namespace
             std::vector<double> doubleQuote_;
             std::vector<cl::tape_double> computedRate_;
 
-
             FairRate<T, I> var_;
         };
 
@@ -365,7 +365,8 @@ namespace
     struct TestBootstrapFromUpfront
         : public cl::AdjointTest<TestBootstrapFromUpfront<T, I>>
     {
-        static const CalcMethod default_method = other;
+        using CalcMethod = typename cl::AdjointTest<TestBootstrapFromUpfront<T,I>>::CalcMethod;
+        static const CalcMethod default_method = CalcMethod::other;
 
         TestBootstrapFromUpfront(Size size)
             : size_(size)
@@ -388,19 +389,19 @@ namespace
         void computeFairRate()
         {
             for (Size i = 0; i < size_; i++)
-                computedRate_[i] = var_.computeFairRateFromUpfront<T, I>(quote_[i], i + 2);
+                computedRate_[i] = var_.template computeFairRateFromUpfront<T, I>(quote_[i], i + 2);
         }
 
         // Calculates derivatives using finite difference method.
         void calcAnalytical()
         {
             double h = 1e-4;  // shift for finite diff. method
-            analyticalResults_.resize(size_*size_, 0);
+            this->analyticalResults_.resize(size_*size_, 0);
             for (Size i = 0; i < size_; i++)
             {
-                Real rightValue = var_.computeFairRateFromUpfront<T, I>(quote_[i] + h, i + 2);
-                Real leftValue = var_.computeFairRateFromUpfront<T, I>(quote_[i] - h, i + 2);
-                analyticalResults_[i*size_ + i] = (rightValue - leftValue) / (2 * h);
+                Real rightValue = var_.template computeFairRateFromUpfront<T, I>(quote_[i] + h, i + 2);
+                Real leftValue = var_.template computeFairRateFromUpfront<T, I>(quote_[i] - h, i + 2);
+                this->analyticalResults_[i*size_ + i] = (rightValue - leftValue) / (2 * h);
             }
         }
 

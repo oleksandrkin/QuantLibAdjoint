@@ -51,7 +51,7 @@ namespace QuantLib {
         T strike() const { return strike_; };
     protected:
         StrikedTypePayoff_T(Option::Type type, T strike)
-            : TypePayoff_T(type), strike_(strike) {}
+            : TypePayoff_T<T>(type), strike_(strike) {}
         T strike_;
     };
 
@@ -70,12 +70,12 @@ namespace QuantLib {
     template <class T>
     T PlainVanillaPayoff_T<T>::operator()(const T& price) const
     {
-        switch (type_)
+        switch (this->type_)
         {
         case Option::Call:
-            return std::max(price - strike_, 0.0);
+            return std::max(price - this->strike_, 0.0);
         case Option::Put:
-            return std::max(strike_ - price, 0.0);
+            return std::max(this->strike_ - price, 0.0);
         default:
             QL_FAIL("unknown/illegal option type");
         }
@@ -89,7 +89,7 @@ namespace QuantLib {
         if (v1 != 0)
             v1->visit(*this);
         else
-            Payoff_T::accept(v);
+            Payoff_T<T>::accept(v);
     }
 }
 

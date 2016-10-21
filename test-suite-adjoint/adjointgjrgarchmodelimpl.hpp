@@ -175,13 +175,13 @@ namespace
 
             for (Size i = 0; i < vol.size(); i++)
             {
-                Handle<Quote> vol(boost::shared_ptr<Quote>(new SimpleQuote(vol[i])));
+                Handle<Quote> volatility(boost::shared_ptr<Quote>(new SimpleQuote(vol[i])));
                 Period maturity((int)(t_[i] / 7.), Weeks);
 
                 // Create calibration helper.
                 boost::shared_ptr<CalibrationHelper> helper(
                     new HestonModelHelper(maturity, calendar_,
-                    s0->value(), strike_, vol,
+                    s0->value(), strike_, volatility,
                     riskFreeTS, dividendTS,
                     CalibrationHelper::ImpliedVolError));
 

@@ -33,8 +33,7 @@ namespace std
     public:
 
         typedef cl::tape_wrapper<Base> _Ty;
-        typedef typename
-            _Ty::value_type value_type;
+        typedef typename _Ty::value_type value_type;
 
         static _Ty _Flt_eps()
         {    // get epsilon
@@ -103,7 +102,7 @@ namespace std
 
         static _Ty atan2(_Ty _Yval, _Ty _Xval)
         {    // return atan(_Yval / _Xval)
-            typedef _Ty::ImplType ad_type;
+            typedef typename _Ty::ImplType ad_type;
 
             ad_type y = _Yval.value();
             ad_type x = _Xval.value();

@@ -119,7 +119,7 @@ namespace QuantLib {
                 Real cBS = blackFormula(Option::Call, k, fwd_, atmVol_ * std::sqrt(T_), dDiscount_);
                 Real c = cBS + x1*(premiaMKT[0] - premiaBS[0]) + x2*(premiaMKT[1] - premiaBS[1]) + x3*(premiaMKT[2] - premiaBS[2]);
                 Real std = blackFormulaImpliedStdDev(Option::Call, k, fwd_, c, dDiscount_);
-                return std / sqrt(T_);
+                return std / std::sqrt(T_);
             }
             Real primitive(Real) const {
                 QL_FAIL("Vanna Volga primitive not implemented");

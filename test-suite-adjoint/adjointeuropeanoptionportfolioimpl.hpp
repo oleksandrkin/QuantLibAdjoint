@@ -749,11 +749,13 @@ namespace
         : GreekTestBase<GreekTraits>
         , cl::AdjointTest<GreekTest<GreekTraits>>
     {
+        typedef typename GreekTestBase<GreekTraits>::calculator calculator;
+        
         // Constructor parameters:
         // logger - pointer to output stream which contains log stream.
         explicit GreekTest(cl::tape_empty_test_output* logger = nullptr)
-            : GreekTestBase()
-            , AdjointTest()
+            : GreekTestBase<GreekTraits>()
+            , cl::AdjointTest<GreekTest<GreekTraits>>()
         {
             setLogger(logger);
             setAnalyticalModel();
@@ -763,8 +765,8 @@ namespace
         // size - size of portfolio.
         // logger - pointer to output stream that contains log stream.
         explicit GreekTest(Size size, cl::tape_empty_test_output* logger = nullptr)
-            : GreekTestBase()
-            , AdjointTest()
+            : GreekTestBase<GreekTraits>()
+            , cl::AdjointTest<GreekTest<GreekTraits>>()
         {
             setLogger(logger);
             setPseudorandomData(size);
@@ -822,38 +824,38 @@ namespace
 
         void recordTape()
         {
-            assert(!data_[independent1].empty());
+            assert(!this->data_[this->independent1].empty());
 
-            GreekTestBase::recordTape(f_);
+            GreekTestBase<GreekTraits>::recordTape(this->f_);
         }
 
         void calcReverse()
         {
-            calculator::calcReverse(*f_, reverseResults_);
+            calculator::calcReverse(*(this->f_), this->reverseResults_);
         }
 
         void calcForward()
         {
-            calculator::calcForward(*f_, forwardResults_);
+            calculator::calcForward(*(this->f_), this->forwardResults_);
         }
 
         void calcAnalytical()
         {
-            analyticalResults_ = GreekTestData::analytical();
+            this->analyticalResults_ = GreekTestData::analytical();
         }
 
         Size indepVarNumber()
         {
-            return GreekTestBase::indepVarNumber();
+            return GreekTestBase<GreekTraits>::indepVarNumber();
         }
 
         Size minPerfIteration() { return iterNumFactor; }
 
-        double relativeTol() const { return model_->relativeTol_; }
+        double relativeTol() const { return this->model_->relativeTol_; }
 
-        double absTol() const { return model_->absTol_; }
+        double absTol() const { return this->model_->absTol_; }
 
-        std::string analyticalName() const { return model_->description_; }
+        std::string analyticalName() const { return this->model_->description_; }
     };
 
     template <Greek greek>

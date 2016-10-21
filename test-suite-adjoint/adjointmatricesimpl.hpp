@@ -105,7 +105,7 @@ namespace
     typename std::iterator_traits<typename Cont::iterator>::value_type norm(const Cont& c)
     {
         // Matrix does not define value_type directly, but defines iterator.
-        typedef std::iterator_traits<typename Cont::iterator>::value_type value_type;
+        typedef typename std::iterator_traits<typename Cont::iterator>::value_type value_type;
         value_type sum = 0;
         for (auto iter = c.begin(); iter != c.end(); ++iter)
         {

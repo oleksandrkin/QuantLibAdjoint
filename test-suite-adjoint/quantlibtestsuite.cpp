@@ -198,7 +198,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(AdjointHestonProcessTest::suite());
 
     // Complex Differentiation test
-#if defined CL_TAPE_COMPLEX_ENABLED
+#if defined CL_TAPE_COMPLEX_ENABLED && !defined __GNUC__
     test->add(AdjointComplexTest::suite());
     test->add(AdjointFastFourierTransformTest::suite());
     test->add(AdjointBatesModelTest::suite());

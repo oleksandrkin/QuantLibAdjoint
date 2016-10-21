@@ -18,7 +18,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// # include <boost/accumulators/framework/accumulator_base.hpp>
+# include <boost/accumulators/framework/accumulator_base.hpp>
+# include <boost/accumulators/numeric/functional_fwd.hpp>
+# include <boost/accumulators/accumulators_fwd.hpp>
+# include <boost/parameter/keyword.hpp>
 
 namespace boost
 {
@@ -82,7 +85,7 @@ namespace boost {  namespace accumulators
 #               pragma message ("boost overloading: " __FUNCSIG__)
 #           endif
 
-                    numeric::max_assign(this->max_, args[sample]);
+                    numeric::max_assign(this->max_, args[parameter::keyword<tag::sample>::instance]);
                 }
 
                 template <class T>
@@ -97,4 +100,3 @@ namespace boost {  namespace accumulators
         }
     }
 }
-

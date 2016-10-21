@@ -229,7 +229,7 @@ namespace
         std::vector<Real> Y_;
         std::vector<Real> analyticalY_;
     };
-    
+
     struct NoOptTestData
     {
         explicit NoOptTestData()
@@ -314,7 +314,7 @@ namespace
         cl::tape_empty_test_output outDeriv_;
         cl::tape_empty_test_output outValue_;
     };
-    
+
     struct InnerArrayTest
         : cl::AdjointTest<InnerArrayTest>
     {
@@ -395,7 +395,7 @@ namespace
         void setForwardResults(const inner_type& res)
         {
             auto& result = res.array_value_;
-            forwardResults_.assign(std::begin(result), std::end(result));            
+            forwardResults_.assign(std::begin(result), std::end(result));
         }
 
         void setReverseResults(const inner_type& res)
@@ -437,7 +437,7 @@ namespace
         std::vector<double> analyticalY_;
         std::unique_ptr<func_type> adf_;
     };
-    
+
     struct InnerArrayTestData
     {
         explicit InnerArrayTestData()
@@ -525,7 +525,7 @@ namespace
         cl::tape_empty_test_output outDeriv_;
         cl::tape_empty_test_output outValue_;
     };
-    
+
     struct MixedTest
         : cl::AdjointTest<MixedTest>
     {
@@ -652,7 +652,7 @@ namespace
         std::unique_ptr<func_type> adf_;
         inner_type x_val_;
     };
-    
+
     struct MixedTestData
     {
         explicit MixedTestData()

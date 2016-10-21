@@ -21,7 +21,7 @@ FOR A PARTICULAR PURPOSE.  See the license for more details.
 #define CL_TAPE_INNER_ARRAY_ENABLED
 
 #include "adjointarrayimpl.hpp"
-
+ 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 
@@ -116,7 +116,7 @@ bool AdjointArrayTest::testInnerArray()
 bool AdjointArrayTest::testMixed()
 {
     BOOST_TEST_MESSAGE("Testing Adjoint using mixed optimization...");
-    
+
     // Initializations...
     MixedTestData td;
     Size n = 5;
@@ -137,7 +137,7 @@ bool AdjointArrayTest::testMixed()
     // Declare the dependent variable and stop the tape recording.
     f.Dependent(X, Y);
     // Initial Forward(0) sweep for actual data.
-    f.Forward(0, std::vector<cl::tape_value>{ input });    
+    f.Forward(0, std::vector<cl::tape_value>{ input });
 
     // Forward mode calculation.
     cl::tape_value forw = f.Forward(1, std::vector<cl::tape_value>{ 1.0 })[0];

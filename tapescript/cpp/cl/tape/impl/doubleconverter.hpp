@@ -103,6 +103,21 @@ namespace cl
             this_value.value_ = other_value.value_;
         }
     };
+    
+    /// <summary>This template and its specializations provide conversion to tape_double value_type.</summary>
+    template <typename Type, typename ValueType, typename NativeType
+                , typename IsArithm, typename IsConv, /*typename IsHasOper,*/ typename IsEnum>
+    struct tape_double_convert<Type, ValueType, NativeType
+        , std::true_type, IsArithm, IsConv, std::true_type, IsEnum>
+    {
+        typedef ValueType type;
+
+        template <typename ThisType>
+        static void convert(ThisType& this_value, Type const& other_value)
+        {
+            this_value.value_ = *const_cast<typename std::remove_cv<ValueType>::type *>(&other_value.value_);
+        }
+    };
 
     /// <summary>This template and its specializations provide conversion to tape_double value_type.</summary>
     template <typename Type, typename ValueType, typename NativeType

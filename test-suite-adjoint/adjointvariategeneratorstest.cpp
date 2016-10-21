@@ -19,8 +19,8 @@ FOR A PARTICULAR PURPOSE.  See the license for more details.
 
 #include "adjointvariategeneratorstest.hpp"
 
-#include <boost/random.hpp>
 #include "adjointtestutilities.hpp"
+#include <boost/random.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;

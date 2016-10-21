@@ -432,7 +432,7 @@ namespace
         : cl::AdjointTest<Test>
         {
             explicit Test(Size size, TestData* data)
-            : AdjointTest()
+            : cl::AdjointTest<Test>()
             , data_(data)
             , size_(size)
             , rates_(size)
@@ -460,7 +460,7 @@ namespace
             {
                 cl::Independent(rates_);
                 calculateResRates(rates_, resRates_);
-                f_ = std::make_unique<cl::tape_function<double>>(rates_, resRates_);
+                this->f_ = std::make_unique<cl::tape_function<double>>(rates_, resRates_);
             }
 
             void calculateResRates(std::vector<Real> rates, std::vector<Real>& resRates)
@@ -509,7 +509,7 @@ namespace
             {
                 double h = 1e-4;
                 std::vector<Real> resRight(1), resLeft(1);
-                analyticalResults_.resize(size_);
+                this->analyticalResults_.resize(size_);
                 for (Size i = 0; i < size_; i++)
                 {
                     rates_[i] += h;
@@ -517,7 +517,7 @@ namespace
                     rates_[i] -= 2 * h;
                     calculateResRates(rates_, resLeft);
                     rates_[i] += h;
-                    analyticalResults_[i] = (resRight[0] - resLeft[0]) / (2 * h);
+                    this->analyticalResults_[i] = (resRight[0] - resLeft[0]) / (2 * h);
                 }
             }
 

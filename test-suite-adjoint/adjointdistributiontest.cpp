@@ -21,7 +21,7 @@ FOR A PARTICULAR PURPOSE.  See the license for more details.
 #include "utilities.hpp"
 #include "adjointtestutilities.hpp"
 #include "adjointdistributiontest.hpp"
-#include "boost\math\distributions.hpp"
+#include "boost/math/distributions.hpp"
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;

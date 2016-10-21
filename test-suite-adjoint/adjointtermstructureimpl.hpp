@@ -325,9 +325,9 @@ namespace
                 data_->calculateFinDiff(rate_
                                         , h
                                         , analyticalResults_
-                                        , [this] (std::vector<Datum>& v) -> std::vector<Real>
+                                        , [this] (std::vector<Datum> const& v) -> std::vector<Real>
                 {
-                    return data_->calculateZeroValue(v);
+                    return this->data_->calculateZeroValue(v);
                 });
             }
 
@@ -478,7 +478,7 @@ namespace
                 data_->calculateFinDiff(rate_
                                         , h
                                         , analyticalResults_
-                                        , [this] (std::vector<Datum>& v) -> std::vector<Real>
+                                        , [this] (std::vector<Datum> const& v) -> std::vector<Real>
                 {
                     return data_->calculateForwardValue(v);
                 });
@@ -633,7 +633,7 @@ namespace
                 data_->calculateFinDiff(rate_
                                         , h
                                         , analyticalResults_
-                                        , [this] (std::vector<Datum>& v) -> std::vector<Real>
+                                        , [this] (std::vector<Datum> const& v) -> std::vector<Real>
                 {
                     return data_->calculateDiscountValues(v);
                 });

@@ -20,7 +20,7 @@ FOR A PARTICULAR PURPOSE.  See the license for more details.
 
 // Based on termstructure.cpp from Quantlib/test-suite.
 
-#include "ql\quantlib.hpp"
+#include "ql/quantlib.hpp"
 #include "utilities.hpp"
 #include "adjointtestutilities.hpp"
 #include "adjointtermstructureimpl.hpp"

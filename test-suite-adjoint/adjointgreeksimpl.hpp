@@ -70,6 +70,17 @@ namespace
         , Time
         , Rate
     };
+    
+    template <class T>
+    inline T black_scholes_price(T const& strike, T const& stock, T const& sigma, T const& time, T const& rate)
+    {
+        T inversed_discount_factor = std::exp(rate * time);
+        T discount_factor = 1 / inversed_discount_factor;
+        T forward = stock * inversed_discount_factor;
+        T stdDev = sigma * std::sqrt(time);
+
+        return BlackCalculator_T<T>(Option::Call, strike, forward, stdDev, discount_factor).value();
+    }
 
     template <class T>
     inline T black_scholes_price(const std::vector<T>& data, size_t start = 0, size_t stride = 1)
@@ -82,18 +93,6 @@ namespace
 
         return black_scholes_price(strike, stock, sigma, time, rate);
     }
-
-    template <class T>
-    inline T black_scholes_price(T const& strike, T const& stock, T const& sigma, T const& time, T const& rate)
-    {
-        T inversed_discount_factor = std::exp(rate * time);
-        T discount_factor = 1 / inversed_discount_factor;
-        T forward = stock * inversed_discount_factor;
-        T stdDev = sigma * std::sqrt(time);
-
-        return BlackCalculator_T<T>(Option::Call, strike, forward, stdDev, discount_factor).value();
-    }
-
 
     // Struct for graphics recording.
     struct OutStruct

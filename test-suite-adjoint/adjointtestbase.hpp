@@ -23,10 +23,17 @@ FOR A PARTICULAR PURPOSE.  See the license for more details.
 
 #include "adjointtestutilities.hpp"
 
-#define CL_ADJOINT_TEST_BASE_ERROR(msg)             \
-    log_ << "Error in " __FUNCSIG__ << std::endl;   \
-    log_ << msg << std::endl;                       \
-    BOOST_ERROR(msg)
+#if defined _MSC_VER
+#   define CL_ADJOINT_TEST_BASE_ERROR(msg)             \
+       log_ << "Error in " __FUNCSIG__ << std::endl;   \
+       log_ << msg << std::endl;                       \
+       BOOST_ERROR(msg)
+#elif __GNUC__
+#   define CL_ADJOINT_TEST_BASE_ERROR(msg)                       \
+       log_ << std::string("Error in ") + __PRETTY_FUNCTION__ << std::endl;   \
+       log_ << msg << std::endl;                                 \
+       BOOST_ERROR(msg)    
+#endif 
 
 namespace cl
 {
@@ -114,8 +121,7 @@ namespace cl
                 timer_.restart();
             }
 
-            template <CalcMethod method>
-            void before()
+            void before(CalcMethod method)
             {
                 if (muted_)
                     return;
@@ -123,8 +129,7 @@ namespace cl
                 timer_.restart();
             }
 
-            template <CalcMethod method>
-            void after()
+            void after(CalcMethod method)
             {
                 if (muted_)
                     return;
@@ -258,10 +263,18 @@ namespace cl
             return that()->check();
         }
 
+	struct dummy {};
+
+	template <typename T = dummy>
+	bool testAdjoint()
+	{
+		return testAdjoint<test_type::default_method>();
+	}
+
         // Tests adjoint derivative calculation with one method only.
         // The tape function, tested method derivatives and analytical derivatives will be recalculated.
         // Returns true if derivative consistency check passed, false otherwise.
-        template<CalcMethod method = test_type::default_method>
+        template<CalcMethod method>
         bool testAdjoint()
         {
             static_assert(method != analytical, "Use this method for testing Adjoint methods ONLY");
@@ -325,8 +338,17 @@ namespace cl
             return elapsed / testNo;
         }
 
+        template <CalcMethod method>
+        size_t perfIteration();
+
+		template <typename T = dummy>
+        double testPerformance(size_t testNo = 0)
+        {
+			return testPerformance<test_type::default_method>(testNo);
+		}
+
         // Returns performance of derivatives calculations.
-        template <CalcMethod method = test_type::default_method>
+        template <CalcMethod method>
         double testPerformance(size_t testNo = 0)
         {
             if (!testNo)
@@ -338,8 +360,8 @@ namespace cl
                 that()->doTape();
             }
             log_ << method << " performance testing." << std::endl;
-            log_.before<method>();
-            log_.mute();
+            log_.before(method);
+            log_.mute();            
             boost::timer timer;
             for (size_t i = 0; i < testNo; i++)
             {
@@ -347,7 +369,7 @@ namespace cl
             }
             double elapsed = timer.elapsed();
             log_.unmute();
-            log_.after<method>();
+            log_.after(method);
             return elapsed / testNo;
         }
 
@@ -378,9 +400,9 @@ namespace cl
         template <CalcMethod method>
         void doCalculation()
         {
-            log_.before<method>();
+            log_.before(method);
             that()->calculate<method>();
-            log_.after<method>();
+            log_.after(method);
         }
 
         // Records tape and sets new tape function.
@@ -392,6 +414,79 @@ namespace cl
             log_.afterTape();
         }
 
+#   if defined __GNUC__
+
+        template <CalcMethod>
+        struct holder;
+        
+        template <class>
+        struct caller;
+
+        template <template <CalcMethod> class H>
+        struct caller<H <other> >
+        {
+            static void calculate(AdjointTestBase * base)
+            {
+                base->that()->calcAdjoint();
+            }
+            
+            static adjoint_result_type& results(AdjointTestBase * base)
+            {
+                return base->adjointResults_;
+            }
+        };
+        
+        template <template <CalcMethod> class H>
+        struct caller<H <forward> >
+        {
+			static void calculate(AdjointTestBase * base)
+            {
+                base->that()->calcForward();
+            }
+            
+            static adjoint_result_type& results(AdjointTestBase * base)
+            {
+                return base->forwardResults_;
+            }
+        };
+        
+        template <template <CalcMethod> class H>
+        struct caller<H <reverse> >
+        {
+			static void calculate(AdjointTestBase * base)
+            {
+                base->that()->calcReverse();
+            }
+			
+            static adjoint_result_type& results(AdjointTestBase * base)
+            {
+                return base->reverseResults_;
+            }
+        };
+        
+        template <template <CalcMethod> class H>
+        struct caller<H <analytical> >
+        {
+			static void calculate(AdjointTestBase * base)
+            {
+                base->that()->calcAnalytical();
+            }
+			
+        };
+        
+        template <CalcMethod method>
+        void calculate()
+        {
+            caller<holder<method>>::calculate(this);
+        }
+
+        template <CalcMethod method>
+        adjoint_result_type& results()
+        {
+            return caller<holder<method>>::results(this);
+        }
+
+#   elif defined _MSC_VER
         template <CalcMethod method>
         void calculate()
         {
@@ -416,6 +511,14 @@ namespace cl
         {
             that()->calcAdjoint();
         }
+
+        template <CalcMethod method>
+        adjoint_result_type& results();
+
+        template <> adjoint_result_type& results<forward>() { return forwardResults_; }
+        template <> adjoint_result_type& results<reverse>() { return reverseResults_; }
+        template <> adjoint_result_type& results<other>() { return adjointResults_; }
+#   endif
 
         // Checks forward mode, reverse mode and analytical result consistency.
         template<typename Class = void>
@@ -445,9 +548,11 @@ namespace cl
                 log_ << std::setw(15) << std::right << *anl << std::endl;
 
                 // Maximum of absolut values of results.
-                Real maxabs = std::max(std::abs(*anl), std::max(std::abs(*fwd), std::abs(*rev)));
+                Real maxabs = std::max(std::abs(*anl), 
+					std::max(std::abs(Real(*fwd))
+					, std::abs(Real(*rev))));
                 Real tol = std::max(that()->relativeTol() * maxabs, that()->absTol());
-                if (std::abs(*fwd - *anl) > tol)
+                if (std::abs(Real(*fwd) - *anl) > tol)
                 {
                     result = false;
                     CL_ADJOINT_TEST_BASE_ERROR("Forward mode and " << that()->analyticalName() << " derivative[" << i << "] mismatch."
@@ -455,7 +560,7 @@ namespace cl
                         << std::setw(24) << std::left << "\n    " + that()->analyticalName() + ":" << *anl
                         << "\n    tolerance:  " << tol);
                 }
-                if (std::abs(*rev - *anl) > tol)
+                if (std::abs(Real(*rev) - *anl) > tol)
                 {
                     result = false;
                     CL_ADJOINT_TEST_BASE_ERROR("Reverse mode and " << that()->analyticalName() << " derivative[" << i << "] mismatch."
@@ -463,7 +568,7 @@ namespace cl
                         << std::setw(24) << std::left << "\n    " + that()->analyticalName() + ": " << *anl
                         << "\n    tolerance:  " << tol);
                 }
-                if (std::abs(*rev - *fwd) > tol)
+                if (std::abs(Real(*rev - *fwd)) > tol)
                 {
                     result = false;
                     CL_ADJOINT_TEST_BASE_ERROR("Forward mode and Reverse mode derivative[" << i << "] mismatch."
@@ -475,14 +580,7 @@ namespace cl
             return result;
         }
 
-        template <CalcMethod method>
-        adjoint_result_type& results();
-
-        template <> adjoint_result_type& results<forward>() { return forwardResults_; }
-        template <> adjoint_result_type& results<reverse>() { return reverseResults_; }
-        template <> adjoint_result_type& results<other>() { return adjointResults_; }
-
-        template <CalcMethod method = test_type::default_method>
+	template <CalcMethod method>
         bool checkAdjoint()
         {
             bool ok = true;
@@ -502,9 +600,9 @@ namespace cl
                 log_ << std::setw(15) << std::right << *anl << std::endl;
 
                 // Maximum of absolut values of results.
-                Real maxabs = std::max(std::abs(*anl), std::abs(*adj));
+				Real maxabs = std::max(std::abs(*anl), std::abs(Real(*adj)));
                 Real tol = std::max(that()->relativeTol() * maxabs, that()->absTol());
-                if (std::abs(*adj - *anl) > tol)
+                if (std::abs(Real(*adj) - *anl) > tol)
                 {
                     ok = false;
                     CL_ADJOINT_TEST_BASE_ERROR(method << " and " << that()->analyticalName() << " derivative[" << i << "] mismatch."
@@ -515,6 +613,12 @@ namespace cl
             }
             return ok;
         }
+        
+        template <typename T = dummy>
+        bool checkAdjoint()
+        {
+	    return checkAdjoint<test_type::default_method>();
+	}
 
         // Checks reverse mode and analytical result consistency.
         template<typename Class = void>
@@ -537,9 +641,9 @@ namespace cl
                 log_ << std::setw(15) << std::right << *anl << std::endl;
 
                 // Maximum of absolut values of results.
-                Real maxabs = std::max(std::abs(*anl), std::abs(*rev));
+                Real maxabs = std::max(std::abs(*anl), std::abs((Real)*rev));
                 Real tol = std::max(that()->relativeTol() * maxabs, that()->absTol());
-                if (std::abs(*rev - *anl) > tol)
+                if (std::abs(Real(*rev) - *anl) > tol)
                 {
                     result = false;
                     CL_ADJOINT_TEST_BASE_ERROR("Reverse mode and " << that()->analyticalName() << " derivative[" << i << "] mismatch."
@@ -571,23 +675,23 @@ namespace cl
         template<typename Class = void>
         void calcReverse()
         {
-            assert(f_->Range() == 1);
-            reverseResults_ = f_->Reverse(1, std::vector<double>(1, 1));
+            assert(this->f_->Range() == 1);
+            this->reverseResults_ = this->f_->Reverse(1, std::vector<double>(1, 1));
         }
 
         // Default forward calculation method implemetns case of one dimensional range space.
         template<typename Class = void>
         void calcForward()
         {
-            assert(f_->Range() == 1);
-            forwardResults_.resize(that()->indepVarNumber());
+            assert(this->f_->Range() == 1);
+            this->forwardResults_.resize(this->that()->indepVarNumber());
             // Direction for directional derivative.
-            std::vector<double> dX(f_->Domain(), 0);
+            std::vector<double> dX(this->f_->Domain(), 0);
             std::vector<double>::iterator px = dX.begin();
-            std::generate(forwardResults_.begin(), forwardResults_.end(), [&]()
+            std::generate(this->forwardResults_.begin(), this->forwardResults_.end(), [&]()
             {
                 *px = 1;
-                double temp = f_->Forward(1, dX)[0];
+                double temp = this->f_->Forward(1, dX)[0];
                 *px++ = 0;
                 return temp;
             });
@@ -607,7 +711,7 @@ namespace cl
         // Overload this method if your problem has more than one dependent variables.
         size_t depVarNumber()
         {
-            assert(f_ ? (f_->Range() == 1) : true);
+            assert(this->f_ ? (this->f_->Range() == 1) : true);
             return 1;
         }
 
@@ -619,8 +723,74 @@ namespace cl
             return  that()->minPerfIteration()
                 / (that()->indepVarNumber() + that()->depVarNumber()) + 1;
         }
+        
+        using CalcMethod = typename AdjointTestBase<Test>::CalcMethod;
+        
+#if defined __GNUC__
+
+        template <CalcMethod>
+        struct holder;
+        
+        template <class H>
+        struct caller;
+
+        template <template <CalcMethod> class H>
+        struct caller<H <CalcMethod::other> >
+        {
+            // Default number of tests for other adjoint methods performance measuring.
+            static size_t perfIteration(AdjointTest * base)
+            {
+                // calcReverse() has at least O(indepVarNumber + depVarNumber) complexity.
+                return  base->that()->minPerfIteration()
+                    / (base->that()->indepVarNumber() + base->that()->depVarNumber()) + 1;
+            }
+        };
+        
+        template <template <CalcMethod> class H>
+        struct caller<H <CalcMethod::forward> >
+        {
+            // Default number of tests for forward mode performance measuring.
+            static size_t perfIteration(AdjointTest * base)
+            {
+                // calcForward() has at least O(indepVarNumber *(indepVarNumber + depVarNumber)) complexity.
+                return  base->that()->minPerfIteration() / base->that()->indepVarNumber()
+                    / (base->that()->indepVarNumber() + base->that()->depVarNumber()) + 1;
+            }
+        };
+        
+        template <template <CalcMethod> class H>
+        struct caller<H <CalcMethod::reverse> >
+        {
+            // Default number of tests for reverse mode performance measuring.
+            static size_t perfIteration(AdjointTest * base)
+            {
+                // calcReverse() has at least O(depVarNumber *(indepVarNumber + depVarNumber)) complexity.
+                return  base->that()->minPerfIteration() / base->that()->depVarNumber()
+                    / (base->that()->indepVarNumber() + base->that()->depVarNumber()) + 1;
+            }
+        };
+        
+        template <template <CalcMethod> class H>
+        struct caller<H <CalcMethod::analytical> >
+        {
+            // Default number of tests for analytical method performance measuring.
+            static size_t perfIteration(AdjointTest * base)
+            {
+                // calcAnalytical() has at least O(depVarNumber + indepVarNumber) complexity.
+                return  base->that()->minPerfIteration()
+                    / (base->that()->indepVarNumber() + base->that()->depVarNumber()) + 1;
+            }
+        };
 
         // Default number of tests for performance measuring.
+        template <CalcMethod method>
+        size_t perfIteration()
+        {
+            return AdjointTest::caller<holder<method> >::perfIteration(this);
+        }
+
+#elif defined _MSC_VER
+
         template <CalcMethod method>
         size_t perfIteration();
 
@@ -659,13 +829,10 @@ namespace cl
             return  that()->minPerfIteration()
                 / (that()->indepVarNumber() + that()->depVarNumber()) + 1;
         }
+
+#endif
+
     };
-
-
-    struct SimpleTest
-        : AdjointTest<SimpleTest>
-    {};
-
 
     // Mesures performance for forward mode and analytical method.
     // Records plots for tape recording, adjoint and analytical method performance (to factory.outPerform_);
@@ -679,7 +846,7 @@ namespace cl
     template <class TestFactory>
     bool recordPerformance(TestFactory& factory, size_t n, size_t step = 1)
     {
-        typedef std::remove_reference_t<decltype(*factory.getTest(1))> test_type;
+        typedef typename std::remove_reference<decltype(*factory.getTest(1))>::type test_type;
         static_assert(
             std::is_base_of<
                 AdjointTestBase<test_type>
@@ -688,9 +855,9 @@ namespace cl
             , "TestFactory class must have getTest(size_t) method that returns"
             " (smart) pointer to AdjointTestBase<Test> derived class");
 
-        std::vector<PerformanceTime> perfTimes(n);
-        std::vector<AdjointTime> adjointTimes(n);
-        std::vector<TapeSize> tapeMemory(n);
+        std::vector<QuantLib::PerformanceTime> perfTimes(n);
+        std::vector<QuantLib::AdjointTime> adjointTimes(n);
+        std::vector<QuantLib::TapeSize> tapeMemory(n);
         auto p = perfTimes.begin();
         auto a = adjointTimes.begin();
         auto m = tapeMemory.begin();
@@ -717,7 +884,7 @@ namespace cl
     template<typename TestFactory>
     void recordAdjointTime(TestFactory& factory, size_t n, size_t step = 1)
     {
-        typedef std::remove_reference_t<decltype(*factory.getTest(1))> test_type;
+        typedef typename std::remove_reference<decltype(*factory.getTest(1))>::type test_type;
         static_assert(
             std::is_base_of<
                 AdjointTestBase<test_type>

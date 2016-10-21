@@ -53,6 +53,8 @@ namespace cl
 #   include <cl/tape/impl/inner/tape_inner_ops.hpp>   
 #endif
 
+#   include <cl/tape/impl/tape_fwd.hpp>
+
 #include <cppad/CppAD.h>
 
 #if !defined CL_USE_NATIVE_FORWARD
@@ -62,7 +64,6 @@ namespace cl
 
 #   include <iostream>
 
-#   include <cl/tape/impl/tape_fwd.hpp>
 #   include <cl/tape/impl/ad/tape_forward0sweep.hpp>
 #   include <cl/tape/impl/ad/tape_forward1sweep.hpp>
 #   include <cl/tape/impl/ad/tape_reverse_sweep.hpp>
@@ -134,7 +135,7 @@ namespace ext
 #include <cl/tape/impl/doublemath.hpp>
 #include <cl/tape/impl/doubleoperators.hpp>
 
-#if defined CL_TAPE_COMPLEX_ENABLED
+#if defined CL_TAPE_COMPLEX_ENABLED && !defined __GNUC__
 #   include <cl/tape/impl/traits.hpp>
 #endif
 

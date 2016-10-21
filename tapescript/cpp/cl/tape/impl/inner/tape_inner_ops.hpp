@@ -26,6 +26,7 @@ limitations under the License.
 #include <array>
 #include <numeric>
 #include <set>
+#include <vector>
 #include <assert.h>
 #include <cl/tape/impl/inner/base_tape_inner.hpp>
 #include <cppad/vector.hpp>

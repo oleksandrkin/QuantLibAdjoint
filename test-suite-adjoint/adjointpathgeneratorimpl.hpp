@@ -307,7 +307,7 @@ namespace
             {
                 cl::Independent(sigma_);
                 generateAssets();
-                f_ = std::make_unique<cl::tape_function<double>>(sigma_, assets_);
+                this->f_ = std::make_unique<cl::tape_function<double>>(sigma_, assets_);
             }
 
             void calcReverse()
@@ -315,16 +315,16 @@ namespace
                 using namespace std;
                 size_t n = indepVarNumber();
                 size_t m = depVarNumber();
-                reverseResults_.resize(m*n);
+                this->reverseResults_.resize(m*n);
                 vector<double> dw(m), dy(n);
 
                 for (size_t i = 0; i < m; i++)
                 {
                     dw[i] = 1;
-                    dy = f_->Reverse(1, dw);
+                    dy = this->f_->Reverse(1, dw);
                     dw[i] = 0;
                     for (size_t j = 0; j < n; j++)
-                        reverseResults_[i*n + j] = dy[j];
+                        this->reverseResults_[i*n + j] = dy[j];
                 }
             }
             // Calculates price of portfolio and each option.
@@ -337,8 +337,8 @@ namespace
             void calcAnalytical()
             {
                 double h = 1.0e-10;  // shift for finite diff. method
-                analyticalResults_.resize(size_);
-                data_->calculateFiniteDifference(sigma_, analyticalResults_, h);
+                this->analyticalResults_.resize(size_);
+                data_->calculateFiniteDifference(sigma_, this->analyticalResults_, h);
             }
 
             double relativeTol() const { return 1e-2; }

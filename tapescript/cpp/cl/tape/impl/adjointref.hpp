@@ -885,7 +885,8 @@ namespace cl
     Independent(std::vector<std::complex<cl::tape_double>> &x, std::size_t abort_index)
     {
 #if defined CL_TAPE_COMPLEX_ENABLED
-        ext::Independent(cl::tapescript::adapt_typed<cl::tape_inner_type<std::complex<double> > >(x), abort_index);
+        auto av = cl::tapescript::adapt_typed<cl::tape_inner_type<std::complex<double> > >(x);
+        ext::Independent(av, abort_index);
 #endif
     }
 
@@ -919,7 +920,8 @@ namespace cl
         print_type<decltype(cl::tapescript::adapt_typed<tape_inner_type<std::complex<double> > >(x)[0])>();
 #endif
 #if defined CL_TAPE_COMPLEX_ENABLED
-        ext::Independent(cl::tapescript::adapt_typed<cl::tape_inner_type<std::complex<double> > >(x));
+        auto av =  cl::tapescript::adapt_typed<cl::tape_inner_type<std::complex<double> > >(x);
+        ext::Independent(av);
 #endif
     }
 
