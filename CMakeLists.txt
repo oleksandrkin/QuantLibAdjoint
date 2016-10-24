@@ -5,8 +5,6 @@ option(no_pragmas       	"disable pragmas"       OFF)
 option(debug_symbols    	"force debug symbols"   OFF)
 option(use_complex      	"turn complex math on"  OFF)
 option(x64              	"force x64 mode"        ON)
-option(use_cached_vector	"use cached vector"  	ON)
-
 
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
